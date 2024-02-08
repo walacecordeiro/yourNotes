@@ -41,51 +41,54 @@ export function NewNoteCard({ onNoteCreated }: NewNoteCardProps) {
   }
 
   function handleStartRecording() {
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isSpeechRecognitionAPIAvailable =
-      "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
-
-    if (!isSpeechRecognitionAPIAvailable) {
+      "SpeechRecognition" in window ||
+      "webkitSpeechRecognition" in window;
+  
+    if (!isSpeechRecognitionAPIAvailable || (!isMobileDevice && !isSpeechRecognitionAPIAvailable)) {
       alert(
-        "Infelizmente seu navagador não suporta a API de gravação. Recomendamos: Chrome, Edge ou Safari"
+        "Infelizmente seu navegador ou dispositivo não suporta a API de gravação. Recomendamos: Chrome, Edge, Safari para desktop ou navegador padrão para dispositivos móveis"
       );
       return;
     }
-
+  
     setIsRecording(true);
     setShouldShowOnBoarding(false);
-
+  
     const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-
+  
     speechRecognition = new SpeechRecognitionAPI();
-
+  
     speechRecognition.lang = "pt-BR";
     speechRecognition.continuous = true;
     speechRecognition.maxAlternatives = 1;
     speechRecognition.interimResults = true;
-
+  
     speechRecognition.onresult = (event) => {
       const transcription = Array.from(event.results).reduce((text, result) => {
         return text.concat(result[0].transcript);
       }, "");
-
+  
       setContent(transcription);
     };
-
+  
     speechRecognition.onerror = (event) => {
       console.log(event);
     };
-
+  
     speechRecognition.start();
   }
-
+  
   function handleStopRecording() {
     setIsRecording(false);
-
+  
     if (speechRecognition != null) {
       speechRecognition.stop();
     }
   }
+  
 
   return (
     <Dialog.Root>
