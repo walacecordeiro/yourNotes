@@ -41,66 +41,51 @@ export function NewNoteCard({ onNoteCreated }: NewNoteCardProps) {
   }
 
   function handleStartRecording() {
-    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isSpeechRecognitionAPIAvailable =
-      "SpeechRecognition" in window ||
-      "webkitSpeechRecognition" in window;
-  
-    if (!isSpeechRecognitionAPIAvailable || (!isMobileDevice && !isSpeechRecognitionAPIAvailable)) {
+      "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+
+    if (!isSpeechRecognitionAPIAvailable) {
       alert(
-        "Infelizmente seu navegador ou dispositivo não suporta a API de gravação. Recomendamos: Chrome, Edge, Safari para desktop ou navegador padrão para dispositivos móveis"
+        "Infelizmente seu navagador não suporta a API de gravação. Recomendamos: Chrome, Edge ou Safari"
       );
       return;
     }
-  
+
     setIsRecording(true);
     setShouldShowOnBoarding(false);
-  
+
     const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-  
+
     speechRecognition = new SpeechRecognitionAPI();
-  
+
     speechRecognition.lang = "pt-BR";
     speechRecognition.continuous = true;
     speechRecognition.maxAlternatives = 1;
-  
-    if (isMobileDevice) {
-      // Ajustes para dispositivos móveis
-      speechRecognition.interimResults = true; // Retornar resultados intermediários
-      speechRecognition.continuous = true; // Permitir escuta contínua
-    }
-  
+    speechRecognition.interimResults = true;
+
     speechRecognition.onresult = (event) => {
-      const transcription = event.results[0][0].transcript;
+      const transcription = Array.from(event.results).reduce((text, result) => {
+        return text.concat(result[0].transcript);
+      }, "");
+
       setContent(transcription);
     };
-  
+
     speechRecognition.onerror = (event) => {
-      console.error("Erro de reconhecimento de fala:", event.error);
+      console.log(event);
     };
-  
-    speechRecognition.onend = () => {
-      setIsRecording(false);
-      if (isMobileDevice && speechRecognition) {
-        // Reinicia a escuta se for um dispositivo móvel e speechRecognition não for null
-        speechRecognition.start();
-      }
-    };
-  
-    if (speechRecognition) {
-      speechRecognition.start();
-    }
+
+    speechRecognition.start();
   }
-  
+
   function handleStopRecording() {
     setIsRecording(false);
-  
+
     if (speechRecognition != null) {
       speechRecognition.stop();
     }
   }
-  
 
   return (
     <Dialog.Root>
@@ -109,8 +94,9 @@ export function NewNoteCard({ onNoteCreated }: NewNoteCardProps) {
           Adicionar nota
         </span>
         <p className="text-sm leading-6 text-slate-400">
-          Grave uma nota em <span className="text-lime-400">texto</span> ou em <span className="text-lime-400">áudio</span> que será convertida para texto
-          automaticamente.
+          Grave uma nota em <span className="text-lime-400">texto</span> ou em{" "}
+          <span className="text-lime-400">áudio</span> que será convertida para
+          texto automaticamente.
         </p>
       </Dialog.Trigger>
 
