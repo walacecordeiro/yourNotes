@@ -64,21 +64,33 @@ export function NewNoteCard({ onNoteCreated }: NewNoteCardProps) {
     speechRecognition.lang = "pt-BR";
     speechRecognition.continuous = true;
     speechRecognition.maxAlternatives = 1;
-    speechRecognition.interimResults = true;
+  
+    if (isMobileDevice) {
+      // Ajustes para dispositivos móveis
+      speechRecognition.interimResults = true; // Retornar resultados intermediários
+      speechRecognition.continuous = true; // Permitir escuta contínua
+    }
   
     speechRecognition.onresult = (event) => {
-      const transcription = Array.from(event.results).reduce((text, result) => {
-        return text.concat(result[0].transcript);
-      }, "");
-  
+      const transcription = event.results[0][0].transcript;
       setContent(transcription);
     };
   
     speechRecognition.onerror = (event) => {
-      console.log(event);
+      console.error("Erro de reconhecimento de fala:", event.error);
     };
   
-    speechRecognition.start();
+    speechRecognition.onend = () => {
+      setIsRecording(false);
+      if (isMobileDevice && speechRecognition) {
+        // Reinicia a escuta se for um dispositivo móvel e speechRecognition não for null
+        speechRecognition.start();
+      }
+    };
+  
+    if (speechRecognition) {
+      speechRecognition.start();
+    }
   }
   
   function handleStopRecording() {
