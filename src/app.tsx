@@ -41,8 +41,6 @@ export function App() {
     setSearch(query);
   }
 
-  console.log(search);
-
   const filteredNotes =
     search != ""
       ? notes.filter((note) =>
